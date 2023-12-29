@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .message-box {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .message{
+            padding: 10px;
+            margin: 5px;
+            background-color: #ffffffac;
+            border-left: 5px solid;
+            transition: all 0.5s ease-in-out;
+        }
+
+        .alert{
+            border-color: rgb(213, 213, 22);
+            box-shadow: 0 0 10px 2px rgba(213, 213, 22, 0.3);
+        }
+
+        .error{
+            border-color: rgb(213, 22, 22);
+            box-shadow: 0 0 10px 2px rgba(213, 22, 22, 0.3);
+        }
+
+        .success{
+            border-color: rgb(22, 213, 22);
+            box-shadow: 0 0 10px 2px rgba(22, 213, 22, 0.3);
+        }
+
+        .fade-out{
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="message-box" id="messageBox">
+    </div>
+    <canvas id="canvas"></canvas>
+    <script src="./asserts/canvas.js"></script>
+</body>
+</html>
