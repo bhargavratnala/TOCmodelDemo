@@ -13,6 +13,39 @@
             overflow: hidden;
         }
 
+        .title{
+            height: 40px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .footer, .settings{
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings{
+            justify-content: space-around;
+        }
+
+        .setting{
+            display: flex;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            height: calc(100% - 120px);
+        }
+
+        canvas{
+            box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.4);
+        }
+
         .message-box {
             position: absolute;
             top: 10px;
@@ -48,9 +81,27 @@
     </style>
 </head>
 <body>
-    <div class="message-box" id="messageBox">
+    <h2 class="title">Finate Automaton</h2>
+    <div class="container" id="container">
+        <div class="message-box" id="messageBox">
+        </div>
+        <canvas id="canvas"></canvas>
     </div>
-    <canvas id="canvas"></canvas>
+    <div class="settings">
+        <div>
+            <label for="startingState">Starting state</label>
+            <select name="startingState" id="startingState">
+                <option disabled selected>--select--</option>
+            </select>
+        </div>
+        <div class="setting">
+            <input type="checkbox" name="isFinal" id="isFinal">
+            <label for="isFinal">is Final states</label>
+        </div>
+    </div>
+    <div class="footer">
+        design by <a href="https://bhargavratnala.github.io/">Bhargav Ratnala</a>
+    </div>
     <script src="./asserts/canvas.js"></script>
 </body>
 </html>

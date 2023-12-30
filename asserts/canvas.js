@@ -1,6 +1,9 @@
 let canvas = document.getElementById('canvas');
-let body = document.querySelector('body');
+let container = document.getElementById('container');
 let messageBox = document.getElementById('messageBox');
+let startStateSelect = document.getElementById('startingState');
+let isFinalState = document.getElementById('isFinal');
+isFinalState.parentElement.style.display = 'none';
 
 let ctx = canvas.getContext('2d');
 
@@ -9,12 +12,12 @@ let selected = null;
 let evaluvate = [];
 let isEvaluvating = false;
 
-canvas.width = body.clientWidth
-canvas.height = body.clientHeight
+canvas.width = container.clientWidth
+canvas.height = container.clientHeight
 
-body.addEventListener('resize', function () {
-    canvas.width = body.clientWidth;
-    canvas.height = body.clientHeight;
+addEventListener('resize', function () {
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
 });
 
 let radius = 25;
@@ -36,6 +39,12 @@ class State{
         ctx.strokeStyle = this.color;
         ctx.fill();
         ctx.stroke();
+        if(this.isFinal){
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, radius - 5, 0, Math.PI * 2, false);
+            ctx.strokeStyle = this.color;
+            ctx.stroke();
+        }
         ctx.font = "20px Arial";
         ctx.textAlign = "center";
         ctx.fillStyle = this.color;
@@ -124,6 +133,10 @@ function animate(){
     lines.forEach(line => {
         line.draw();
     });
+    if(startState !== null){
+        let line = new Line(startState.x - 50, startState.y, startState.x, startState.y, 0, '');
+        line.draw();
+    }
     states.forEach(state => {
         state.update();
     });
@@ -151,14 +164,16 @@ init();
 animate();
 
 canvas.addEventListener('click', function (e) {
-    let x = e.clientX;
-    let y = e.clientY;
+    console.log(e);
+    let x = e.offsetX;
+    let y = e.offsetY;
     let i;
     for(i = 0; i<states.length; i++){
         if(distance(x, y, states[i].x, states[i].y) < radius){
             if(selected === states[i]){
                 selected.color = '#000';
                 selected = null;
+                isFinalState.parentElement.style.display = 'none';
                 break;
             }
             if(selected !== null){
@@ -166,6 +181,7 @@ canvas.addEventListener('click', function (e) {
                 if(input === null || input === undefined || input === '' || inputFormate.test(input) === false || input.length > 1){
                     message("Invalid input", "error");
                     selected.color = '#000';
+                    isFinalState.parentElement.style.display = 'none';
                     selected = null;
                     break;
                 }
@@ -182,6 +198,7 @@ canvas.addEventListener('click', function (e) {
                     if(transitions[selected.id][states[i].id]['symbols'].includes(input)){
                         message("Transition already exists", "error");
                         selected.color = '#000';
+                        isFinalState.parentElement.style.display = 'none';
                         selected = null;
                         break;
                     }
@@ -194,16 +211,24 @@ canvas.addEventListener('click', function (e) {
                 }
                 transitions[selected.id][states[i].id]['symbols'].push(input);
                 selected.color = '#000';
+                isFinalState.parentElement.style.display = 'none';
                 selected = null;
                 break;
             }
             selected = states[i];
+            isFinalState.parentElement.style.display = 'block';
+            isFinalState.checked = selected.isFinal;
             selected.color = 'blue';
             break;
         }
     }
     if(i === states.length){
-        states.push(new State(x, y, "q" + states.length, '#000', states.length));
+        let state = new State(x, y, "q" + states.length, '#000', states.length);
+        let option = document.createElement('option');
+        option.value = state.id;
+        option.innerHTML = state.text;
+        startStateSelect.appendChild(option);
+        states.push(state);
     }
 });
 
@@ -241,3 +266,11 @@ function nextState(state, symbol){
     }
     return states;
 }
+
+isFinalState.addEventListener('change', function (e) {
+    selected.isFinal = this.checked;
+});
+
+startStateSelect.addEventListener('change', function (e) {
+    startState = states[this.value];
+});
