@@ -29,12 +29,33 @@
         }
 
         .settings{
-            justify-content: space-around;
+            padding: 0 10px;
+            justify-content: space-between;
         }
 
         .setting{
             display: flex;
             align-items: center;
+        }
+
+        .checkString{
+            margin-left: 10px;
+            background-color: #0000004d;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .checkString:hover{
+            background-color: #0000007a;
+        }
+
+        .inputString{
+            padding: 5px;
+            border-radius: 5px;
+            border: none;
+            outline: none;
         }
 
         .container {
@@ -94,9 +115,15 @@
                 <option disabled selected>--select--</option>
             </select>
         </div>
+        <div>
+            <div class="setting">
+                <input type="checkbox" name="isFinal" id="isFinal">
+                <label for="isFinal">is Final states</label>
+            </div>
+        </div>
         <div class="setting">
-            <input type="checkbox" name="isFinal" id="isFinal">
-            <label for="isFinal">is Final states</label>
+            <input type="text" name="inputString" id="inputString" class="inputString" placeholder="Enter input string">
+            <button class="checkString" id="checkString">Check</button>
         </div>
     </div>
     <div class="footer">

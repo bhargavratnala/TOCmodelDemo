@@ -3,6 +3,8 @@ let container = document.getElementById('container');
 let messageBox = document.getElementById('messageBox');
 let startStateSelect = document.getElementById('startingState');
 let isFinalState = document.getElementById('isFinal');
+let inputString = document.getElementById('inputString');
+let checkButton = document.getElementById('checkString');
 isFinalState.parentElement.style.display = 'none';
 
 let ctx = canvas.getContext('2d');
@@ -142,7 +144,8 @@ function animate(){
     });
     if(isEvaluvating){
         ctx.beginPath();
-        ctx.fillText(`Evaluating : ${evaluvate.toString()}`, 10, 10);
+        ctx.font = "15px Arial";
+        ctx.fillText(`Evaluating : ${evaluvate.toString()}`, 40, 20);
     }
 }
 
@@ -164,7 +167,6 @@ init();
 animate();
 
 canvas.addEventListener('click', function (e) {
-    console.log(e);
     let x = e.offsetX;
     let y = e.offsetY;
     let i;
@@ -257,6 +259,10 @@ function checkForAcceptance(input){
 }
 
 function nextState(state, symbol){
+    console.log(state, symbol);
+    if(transitions[state.id] === undefined){
+        return [];
+    }
     let keys = Object.keys(transitions[state.id]);
     let states = [];
     for(let i=0; i<keys.length; i++){
@@ -273,4 +279,20 @@ isFinalState.addEventListener('change', function (e) {
 
 startStateSelect.addEventListener('change', function (e) {
     startState = states[this.value];
+});
+
+checkButton.addEventListener('click', function (e) {
+    if(startState === null){
+        message("Please select a start state", "error");
+        return;
+    }
+    if(inputString.value === ''){
+        message("Please enter a string", "error");
+        return;
+    }
+    if(inputFormate.test(inputString.value) === false){
+        message("Invalid input string", "error");
+        return;
+    }
+    checkForAcceptance(inputString.value);
 });
