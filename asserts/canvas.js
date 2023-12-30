@@ -5,6 +5,7 @@ let startStateSelect = document.getElementById('startingState');
 let isFinalState = document.getElementById('isFinal');
 let inputString = document.getElementById('inputString');
 let checkButton = document.getElementById('checkString');
+let clearButton = document.getElementById('clearButton');
 isFinalState.parentElement.style.display = 'none';
 
 let ctx = canvas.getContext('2d');
@@ -60,6 +61,43 @@ class State{
 
     toString(){
         return this.text;
+    }
+}
+
+class Loop{
+    constructor(x, y, text){
+        this.x = x;
+        this.y = y;
+        this.text = text;
+    }
+
+    draw(){
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, radius, 0, Math.PI * 2, false);
+        ctx.fillStyle = '#fff';
+        ctx.strokeStyle = this.color;
+        ctx.fill();
+        ctx.stroke();
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        ctx.fillStyle = this.color;
+        ctx.fillText(this.text, this.x + radius + 5, this.y + radius + 5);
+        ctx.closePath();
+
+        ctx.beginPath();
+        ctx.moveTo(this.x , this.y - radius);
+        ctx.lineTo(this.x - 8, this.y - radius - 8);
+        ctx.lineTo(this.x - 8, this.y - radius + 8);
+        ctx.fillStyle = 'black';
+        ctx.fill();
+        ctx.closePath();
+
+        ctx.beginPath();
+        ctx.font = "15px Arial";
+        ctx.textAlign = "center";
+        ctx.fillStyle = 'black';
+        ctx.fillText(this.text, this.x , this.y - radius - 5);
+        ctx.closePath();
     }
 }
 
@@ -119,19 +157,25 @@ function distance(x1, y1, x2, y2){
 
 let states;
 let lines;
+let loops;
 let transitions;
 let startState;
 
 function init(){
     states = [];
     lines = [];
+    loops = [];
     transitions = {};
     startState = null;
+    startStateSelect.innerHTML = '<option disabled selected>--select--</option>';
 }
 
 function animate(){
     requestAnimationFrame(animate);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    loops.forEach(loop=>{
+        loop.draw();
+    });
     lines.forEach(line => {
         line.draw();
     });
@@ -173,18 +217,38 @@ canvas.addEventListener('click', function (e) {
     for(i = 0; i<states.length; i++){
         if(distance(x, y, states[i].x, states[i].y) < radius){
             if(selected === states[i]){
-                selected.color = '#000';
-                selected = null;
-                isFinalState.parentElement.style.display = 'none';
+                let input = prompt("Enter symbol:");
+                if(input === null || input === undefined || input === '' || inputFormate.test(input) === false || input.length > 1){
+                    message("Invalid input", "error");
+                    clearSelection();
+                    break;
+                }
+                if(transitions[selected.id] === undefined){
+                    transitions[selected.id] = {};
+                }
+                if(transitions[selected.id][states[i].id] === undefined){
+                    let loop = new Loop(selected.x, selected.y - radius/4 * 3, input);
+                    loops.push(loop);
+                    selected.color = '#000';
+                    transitions[selected.id][states[i].id] = {'line' : loop, 'symbols' : []};
+                }
+                else{
+                    if(transitions[selected.id][states[i].id]['symbols'].includes(input)){
+                        message("Transition already exists", "error");
+                        clearSelection();
+                        break;
+                    }
+                    transitions[selected.id][states[i].id]['line'].text = transitions[selected.id][states[i].id]['line'].text + ", " + input;
+                }
+                transitions[selected.id][states[i].id]['symbols'].push(input);
+                clearSelection();
                 break;
             }
             if(selected !== null){
                 let input = prompt("Enter symbol:");
                 if(input === null || input === undefined || input === '' || inputFormate.test(input) === false || input.length > 1){
                     message("Invalid input", "error");
-                    selected.color = '#000';
-                    isFinalState.parentElement.style.display = 'none';
-                    selected = null;
+                    clearSelection();
                     break;
                 }
                 if(transitions[selected.id] === undefined){
@@ -199,9 +263,7 @@ canvas.addEventListener('click', function (e) {
                 else{
                     if(transitions[selected.id][states[i].id]['symbols'].includes(input)){
                         message("Transition already exists", "error");
-                        selected.color = '#000';
-                        isFinalState.parentElement.style.display = 'none';
-                        selected = null;
+                        clearSelection();
                         break;
                     }
                     transitions[selected.id][states[i].id]['line'].text = transitions[selected.id][states[i].id]['line'].text + ", " + input;
@@ -212,12 +274,11 @@ canvas.addEventListener('click', function (e) {
                     transitions[selected.id][states[i].id]['line'].offset = 20;
                 }
                 transitions[selected.id][states[i].id]['symbols'].push(input);
-                selected.color = '#000';
-                isFinalState.parentElement.style.display = 'none';
-                selected = null;
+                clearSelection();
                 break;
             }
             selected = states[i];
+            clearButton.innerHTML = 'CLear Selection';
             isFinalState.parentElement.style.display = 'block';
             isFinalState.checked = selected.isFinal;
             selected.color = 'blue';
@@ -241,21 +302,27 @@ function checkForAcceptance(input){
     while(evaluvate.length > 0){
         let [state, input] = evaluvate.shift();
         console.log(state, input);
+        if(input.length === 0 && state.isFinal){
+            isEvaluvating = false;
+            message("String accepted", "success");
+            return true;
+        }
         let nextStates = nextState(state, input[0]);
         console.log("nextstates : ", nextStates, evaluvate);
-        if(nextStates.length === 0 && input.length === 0){
-            if(state.isFinal){
-                isEvaluvating = false;
-                return true;
-            }
-            continue;
-        }
         for(let i=0; i<nextStates.length; i++){
             evaluvate.unshift([states[nextStates[i]], input.slice(1)]);
         }
     }
     isEvaluvating = false;
+    message("String not accepted", "error");
     return false;
+}
+
+function clearSelection(){
+    clearButton.innerHTML = 'Clear Board';
+    selected.color = '#000';
+    isFinalState.parentElement.style.display = 'none';
+    selected = null;
 }
 
 function nextState(state, symbol){
@@ -280,6 +347,13 @@ isFinalState.addEventListener('change', function (e) {
 startStateSelect.addEventListener('change', function (e) {
     startState = states[this.value];
 });
+
+clearButton.addEventListener('click', () =>{
+    if(selected !== null)
+    clearSelection();
+    else
+    init();
+})
 
 checkButton.addEventListener('click', function (e) {
     if(startState === null){
