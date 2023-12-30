@@ -1,4 +1,5 @@
 let canvas = document.getElementById('canvas');
+let body = document.querySelector('body');
 let container = document.getElementById('container');
 let messageBox = document.getElementById('messageBox');
 let startStateSelect = document.getElementById('startingState');
@@ -6,6 +7,8 @@ let isFinalState = document.getElementById('isFinal');
 let inputString = document.getElementById('inputString');
 let checkButton = document.getElementById('checkString');
 let clearButton = document.getElementById('clearButton');
+let stepsButton = document.getElementById('steps');
+let themeButton = document.getElementById('theme');
 isFinalState.parentElement.style.display = 'none';
 
 let ctx = canvas.getContext('2d');
@@ -14,6 +17,23 @@ let inputFormate = RegExp('[a-z0-9]');
 let selected = null;
 let evaluvate = [];
 let isEvaluvating = false;
+let delay = 2500;
+let showsteps = false;
+let themes = {
+    0 : {
+        'background' : '#fff',
+        'foreground' : '#000',
+        'select' : 'blue',
+        'currentstate' : 'green'
+    },
+    1 : {
+        'background' : '#000000',
+        'foreground' : '#fff',
+        'select' : 'yellow',
+        'currentstate' : 'green'
+    }
+}
+let theme = 1;
 
 canvas.width = container.clientWidth
 canvas.height = container.clientHeight
@@ -26,31 +46,34 @@ addEventListener('resize', function () {
 let radius = 25;
 
 class State{
-    constructor(x, y, text, color, id){
+    constructor(x, y, text, id){
         this.x = x;
         this.y = y;
         this.text = text;
-        this.color = color;
         this.id = id;
         this.isFinal = false;
+        this.selected = false;
     }
 
     draw() {
+        let color = this === selected ? themes[theme].select : themes[theme].foreground;
+        if(this.selected)
+        color = themes[theme].currentstate;
         ctx.beginPath();
         ctx.arc(this.x, this.y, radius, 0, Math.PI * 2, false);
-        ctx.fillStyle = '#fff';
-        ctx.strokeStyle = this.color;
+        ctx.fillStyle = themes[theme].background;
+        ctx.strokeStyle = color;
         ctx.fill();
         ctx.stroke();
         if(this.isFinal){
             ctx.beginPath();
             ctx.arc(this.x, this.y, radius - 5, 0, Math.PI * 2, false);
-            ctx.strokeStyle = this.color;
+            ctx.strokeStyle = color;
             ctx.stroke();
         }
         ctx.font = "20px Arial";
         ctx.textAlign = "center";
-        ctx.fillStyle = this.color;
+        ctx.fillStyle = color;
         ctx.fillText(this.text, this.x, this.y);
         ctx.closePath();
     }
@@ -74,28 +97,22 @@ class Loop{
     draw(){
         ctx.beginPath();
         ctx.arc(this.x, this.y, radius, 0, Math.PI * 2, false);
-        ctx.fillStyle = '#fff';
-        ctx.strokeStyle = this.color;
-        ctx.fill();
+        ctx.strokeStyle = themes[theme].foreground;
         ctx.stroke();
-        ctx.font = "20px Arial";
-        ctx.textAlign = "center";
-        ctx.fillStyle = this.color;
-        ctx.fillText(this.text, this.x + radius + 5, this.y + radius + 5);
         ctx.closePath();
 
         ctx.beginPath();
         ctx.moveTo(this.x , this.y - radius);
         ctx.lineTo(this.x - 8, this.y - radius - 8);
         ctx.lineTo(this.x - 8, this.y - radius + 8);
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = themes[theme].foreground;
         ctx.fill();
         ctx.closePath();
 
         ctx.beginPath();
         ctx.font = "15px Arial";
         ctx.textAlign = "center";
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = themes[theme].foreground;
         ctx.fillText(this.text, this.x , this.y - radius - 5);
         ctx.closePath();
     }
@@ -123,7 +140,7 @@ class Line{
         ctx.beginPath();
         ctx.moveTo(this.x1 + xOffset, this.y1 + yOffset);
         ctx.lineTo(this.x2 + xOffset, this.y2 + yOffset);
-        ctx.strokeStyle = 'black';
+        ctx.strokeStyle = themes[theme].foreground;
         ctx.stroke();
         ctx.closePath();
         // add arrow and text in the middle
@@ -136,14 +153,14 @@ class Line{
         ctx.lineTo(x + 10 * Math.cos(this.angle - Math.PI /6), y + 10 * Math.sin(this.angle - Math.PI / 6));
         ctx.lineTo(x + 10 * Math.cos(this.angle + Math.PI /6), y + 10 * Math.sin(this.angle + Math.PI / 6));
         ctx.lineTo(x, y);
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = themes[theme].foreground;
         ctx.fill();
         ctx.closePath();
 
         ctx.beginPath();
         ctx.font = "15px Arial";
         ctx.textAlign = "center";
-        ctx.fillStyle = 'black';
+        ctx.fillStyle = themes[theme].foreground;
         ctx.fillText(this.text, x + 10, y - 8);
         ctx.closePath();
     }
@@ -160,6 +177,7 @@ let lines;
 let loops;
 let transitions;
 let startState;
+let steps = [];
 
 function init(){
     states = [];
@@ -172,7 +190,8 @@ function init(){
 
 function animate(){
     requestAnimationFrame(animate);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = themes[theme].background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     loops.forEach(loop=>{
         loop.draw();
     });
@@ -189,7 +208,13 @@ function animate(){
     if(isEvaluvating){
         ctx.beginPath();
         ctx.font = "15px Arial";
-        ctx.fillText(`Evaluating : ${evaluvate.toString()}`, 40, 20);
+        ctx.textAlign = "start";
+        ctx.fillStyle = 'red';
+        let evalText = '';
+        evaluvate.forEach(eval => {
+            evalText += `(${eval[0].toString()}, ${eval[1]})`;
+        })
+        ctx.fillText(`Evaluating : ${evalText}`, 20, 20);
     }
 }
 
@@ -229,7 +254,7 @@ canvas.addEventListener('click', function (e) {
                 if(transitions[selected.id][states[i].id] === undefined){
                     let loop = new Loop(selected.x, selected.y - radius/4 * 3, input);
                     loops.push(loop);
-                    selected.color = '#000';
+                    selected.color = themes[theme].foreground;
                     transitions[selected.id][states[i].id] = {'line' : loop, 'symbols' : []};
                 }
                 else{
@@ -257,7 +282,7 @@ canvas.addEventListener('click', function (e) {
                 if(transitions[selected.id][states[i].id] === undefined){
                     let line = new Line(selected.x, selected.y, states[i].x, states[i].y, 0, input);
                     lines.push(line);
-                    selected.color = '#000';
+                    selected.color = themes[theme].foreground;
                     transitions[selected.id][states[i].id] = {'line' : line, 'symbols' : []};
                 }
                 else{
@@ -281,12 +306,12 @@ canvas.addEventListener('click', function (e) {
             clearButton.innerHTML = 'CLear Selection';
             isFinalState.parentElement.style.display = 'block';
             isFinalState.checked = selected.isFinal;
-            selected.color = 'blue';
+            selected.color = themes[theme].select;
             break;
         }
     }
     if(i === states.length){
-        let state = new State(x, y, "q" + states.length, '#000', states.length);
+        let state = new State(x, y, "q" + states.length, states.length);
         let option = document.createElement('option');
         option.value = state.id;
         option.innerHTML = state.text;
@@ -297,10 +322,21 @@ canvas.addEventListener('click', function (e) {
 
 function checkForAcceptance(input){
     evaluvate = [[startState, input]];
+    steps = [];
     let i = 0;
     isEvaluvating = true;
-    while(evaluvate.length > 0){
+    function inner(){
+        let evalText = '';
+        evaluvate.forEach(eval => {
+            evalText += ` (${eval[0].toString()}, ${eval[1]})`;
+        })
+        steps.push(evalText);
         let [state, input] = evaluvate.shift();
+        let prevState = state;
+        prevState.selected = true;
+        setTimeout(() => {
+            prevState.selected = false;
+        }, delay);
         console.log(state, input);
         if(input.length === 0 && state.isFinal){
             isEvaluvating = false;
@@ -312,15 +348,24 @@ function checkForAcceptance(input){
         for(let i=0; i<nextStates.length; i++){
             evaluvate.unshift([states[nextStates[i]], input.slice(1)]);
         }
+        if(nextStates.length === 0){
+            message(`No transition exist from ${state} on ${input}`, 'alert');
+        }
+        if(evaluvate.length > 0){
+            setTimeout(inner, delay);
+        }
+        else{
+            isEvaluvating = false;
+            message("String not accepted", "error");
+            return false;
+        }
     }
-    isEvaluvating = false;
-    message("String not accepted", "error");
-    return false;
+    inner();
 }
 
 function clearSelection(){
     clearButton.innerHTML = 'Clear Board';
-    selected.color = '#000';
+    selected.color = themes[theme].foreground;
     isFinalState.parentElement.style.display = 'none';
     selected = null;
 }
@@ -354,6 +399,11 @@ clearButton.addEventListener('click', () =>{
     else
     init();
 })
+
+themeButton.addEventListener('click', () => {
+    theme = 1 - theme;
+    body.classList.toggle('theme2');
+});
 
 checkButton.addEventListener('click', function (e) {
     if(startState === null){

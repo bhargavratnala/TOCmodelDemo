@@ -6,15 +6,30 @@
     <title>Canvas</title>
     <link rel="stylesheet" href="./asserts/style.css">
 </head>
-<body>
-    <h2 class="title">Finate Automaton</h2>
+<body class="theme2">
+    <div class="header">
+        <div class="instructions">
+            instructions
+            <ul class="instruction-list">
+                <li>Click to add state</li>
+                <li>click on state to select</li>
+                <li>select a state then click another state to add transition</li>
+                <li>select a state to change it's final state setting at the bottom of the screen</li>
+            </ul>
+        </div>
+        <h2 class="title">Finate Automaton</h2>
+        <div class="options">
+            <div id="steps">show steps</div>
+            <div id="theme">theme</div>
+        </div>
+    </div>
     <div class="container" id="container">
         <div class="message-box" id="messageBox">
         </div>
         <canvas id="canvas"></canvas>
     </div>
     <div class="settings">
-        <div>
+        <div class="setting">
             <label for="startingState">Starting state</label>
             <select name="startingState" id="startingState"></select>
         </div>
@@ -24,7 +39,7 @@
                 <label for="isFinal">is Final states</label>
             </div>
         </div>
-        <div>
+        <div class="setting">
             <button class="checkString" id="clearButton">clear Board</button>
         </div>
         <div class="setting">
@@ -33,7 +48,7 @@
         </div>
     </div>
     <div class="footer">
-        design by <a href="https://bhargavratnala.github.io/">Bhargav Ratnala</a>
+        design by &nbsp;<a href="https://bhargavratnala.github.io/">Bhargav Ratnala</a>
     </div>
     <script src="./asserts/canvas.js"></script>
 </body>

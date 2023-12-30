@@ -4,6 +4,29 @@ body {
     width: 100vw;
     height: 100vh;
     overflow: hidden;
+    --background-color: #fff;
+    --foreground-color: #000;
+    --border-1: #00000058;
+    --border-2: #0000007a;
+    --button--background: #00000030;
+    background-color: var(--background-color);
+}
+
+.theme2{
+    --background-color: #1c1c1cef;
+    --foreground-color: #fff;
+    --border-1: #ffffff58;
+    --border-2: #ffffff7a;
+    --button--background: #ffffff60;
+}
+
+.header{
+    display: flex;
+    height: 40px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 10px;
+    color: var(--foreground-color);
 }
 
 .title{
@@ -14,11 +37,59 @@ body {
     justify-content: center;
 }
 
+.instructions{
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 40px;
+}
+
+.instructions:hover .instruction-list{
+    opacity: 1;
+}
+
+.instruction-list{
+    position: absolute;
+    top: 25px;
+    opacity: 0;
+    width: min(300px, 80vw);
+    background-color: var(--background-color);
+    border: 1px solid var(--border-1);
+    border-radius: 5px;
+    padding-right: 5px;
+    transition: all 0.5 linear;
+}
+
+.options{
+    display: flex;
+}
+
+.options > div{
+    margin: 10px;
+    cursor: pointer;
+}
+
+#steps{
+    display: none;
+}
+
+.setting label{
+    color: var(--foreground-color);
+}
+
+.setting button{
+    background-color: var(--button--background);
+}
+
 .footer, .settings{
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.footer{
+    color: var(--foreground-color);
 }
 
 .settings{
@@ -36,7 +107,7 @@ body {
 
 .checkString{
     margin-left: 10px;
-    background-color: #0000004d;
+    background-color: var(--border-1);
     border: none;
     border-radius: 5px;
     padding: 5px 10px;
@@ -44,7 +115,7 @@ body {
 }
 
 .checkString:hover{
-    background-color: #0000007a;
+    background-color: var(--border-2);
 }
 
 .inputString{
@@ -61,19 +132,21 @@ body {
 }
 
 canvas{
-    box-shadow: 0 0 10px 2px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 10px 1px #00000076;
+    background-color: var(--background-color);
 }
 
 .message-box {
     position: absolute;
     top: 10px;
     right: 10px;
+    color: var(--foreground-color);
 }
 
 .message{
     padding: 10px;
     margin: 5px;
-    background-color: #ffffffac;
+    background-color: var(--background-color);
     border-left: 5px solid;
     transition: all 0.5s ease-in-out;
 }
