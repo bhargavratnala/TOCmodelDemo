@@ -8,6 +8,7 @@ let inputString = document.getElementById('inputString');
 let checkButton = document.getElementById('checkString');
 let clearButton = document.getElementById('clearButton');
 let stepsButton = document.getElementById('steps');
+let stepsDisplay = document.getElementById('stepsDisplay');
 let themeButton = document.getElementById('theme');
 isFinalState.parentElement.style.display = 'none';
 
@@ -17,8 +18,7 @@ let inputFormate = RegExp('[a-z0-9]');
 let selected = null;
 let evaluvate = [];
 let isEvaluvating = false;
-let delay = 2500;
-let showsteps = false;
+let delay = 500;
 let themes = {
     0 : {
         'background' : '#fff',
@@ -166,6 +166,27 @@ class Line{
     }
 }
 
+class Tree{
+    constructor(state, input, parent){
+        this.state = state;
+        this.input = input;
+        this.parent = parent;
+        this.children = [];
+    }
+
+    addChild(child){
+        this.children.push(child);
+    }
+
+    getChildren(){
+        return this.children;
+    }
+
+    getText(){
+        return `(${this.state}, ${this.input})`;
+    }
+}
+
 function distance(x1, y1, x2, y2){
     let xDistance = x2 - x1;
     let yDistance = y2 - y1;
@@ -177,7 +198,8 @@ let lines;
 let loops;
 let transitions;
 let startState;
-let steps = [];
+let tree = null;
+let references;
 
 function init(){
     states = [];
@@ -185,6 +207,7 @@ function init(){
     loops = [];
     transitions = {};
     startState = null;
+    references = [];
     startStateSelect.innerHTML = '<option disabled selected>--select--</option>';
 }
 
@@ -294,7 +317,7 @@ canvas.addEventListener('click', function (e) {
                     transitions[selected.id][states[i].id]['line'].text = transitions[selected.id][states[i].id]['line'].text + ", " + input;
                 }
                 if(transitions[states[i].id] !== undefined && transitions[states[i].id][selected.id] !== undefined){
-                    console.log("opposite transition exists");
+                    // console.log("opposite transition exists");
                     transitions[states[i].id][selected.id]['line'].offset = 20;
                     transitions[selected.id][states[i].id]['line'].offset = 20;
                 }
@@ -321,32 +344,37 @@ canvas.addEventListener('click', function (e) {
 });
 
 function checkForAcceptance(input){
-    evaluvate = [[startState, input]];
-    steps = [];
+    evaluvate = [[startState, input, null]];
     let i = 0;
+    let parentNode = null;
     isEvaluvating = true;
     function inner(){
-        let evalText = '';
-        evaluvate.forEach(eval => {
-            evalText += ` (${eval[0].toString()}, ${eval[1]})`;
-        })
-        steps.push(evalText);
-        let [state, input] = evaluvate.shift();
+        let [state, input, parent] = evaluvate.shift();
+        // console.log(state, input, parent);
+        parentNode = new Tree(state, input, parent);
+        if(parent === null){
+            tree = parentNode;
+        }
+        else{
+            parent.addChild(parentNode);
+        }
         let prevState = state;
         prevState.selected = true;
         setTimeout(() => {
             prevState.selected = false;
         }, delay);
-        console.log(state, input);
+        // console.log(state, input);
         if(input.length === 0 && state.isFinal){
             isEvaluvating = false;
             message("String accepted", "success");
+            references = [];
+            drawTree(tree, 0);
             return true;
         }
         let nextStates = nextState(state, input[0]);
-        console.log("nextstates : ", nextStates, evaluvate);
+        // console.log("nextstates : ", nextStates, evaluvate);
         for(let i=0; i<nextStates.length; i++){
-            evaluvate.unshift([states[nextStates[i]], input.slice(1)]);
+            evaluvate.unshift([states[nextStates[i]], input.slice(1), parentNode]);
         }
         if(nextStates.length === 0){
             message(`No transition exist from ${state} on ${input}`, 'alert');
@@ -357,6 +385,8 @@ function checkForAcceptance(input){
         else{
             isEvaluvating = false;
             message("String not accepted", "error");
+            references = [];
+            drawTree(tree, 0);
             return false;
         }
     }
@@ -371,7 +401,7 @@ function clearSelection(){
 }
 
 function nextState(state, symbol){
-    console.log(state, symbol);
+    // console.log(state, symbol);
     if(transitions[state.id] === undefined){
         return [];
     }
@@ -383,6 +413,58 @@ function nextState(state, symbol){
         }
     }
     return states;
+}
+
+function drawTree(node, level){
+    let levelNode = document.getElementById(`level${level}`);
+    if(levelNode === null || levelNode === undefined){
+        levelNode = document.createElement('div');
+        levelNode.classList.add('level');
+        levelNode.id = `level${level}`;
+        stepsDisplay.appendChild(levelNode);
+    }
+    // console.log(node, level);
+    if(level === 0){
+        stepsDisplay.innerHTML = '';
+        levelNode.innerHTML = 'Start State';
+        let div = document.createElement('div');
+        div.innerHTML = node.getText();
+        div.classList.add('state');
+        levelNode.appendChild(div);
+        references.push(div);
+        stepsDisplay.appendChild(levelNode);
+        drawTree(node, level + 1);
+        setHover(div, 1, node.children.length);
+    }
+    else{
+        node.children.forEach((child, index) => {
+            let div = document.createElement('div');
+            div.innerHTML = child.getText();
+            div.classList.add('state');
+            levelNode.appendChild(div);
+            references.push(div);
+            let count = child.children.length;
+            let siblingsCount = node.children.length;
+            let start = references.length +  siblingsCount - index - 1;
+            drawTree(child, level + 1);
+            setHover(div, start, count);
+        });
+    }
+}
+
+function setHover(div, start, count){
+    div.addEventListener('mouseover', function (e) {
+        div.classList.add('nodeHover');
+        for(let i=start; i<start + count; i++){
+            references[i].classList.add('childHover');
+        }
+    });
+    div.addEventListener('mouseout', function (e) {
+        div.classList.remove('nodeHover');
+        for(let i=start; i<start + count; i++){
+            references[i].classList.remove('childHover');
+        }
+    });
 }
 
 isFinalState.addEventListener('change', function (e) {
@@ -419,4 +501,12 @@ checkButton.addEventListener('click', function (e) {
         return;
     }
     checkForAcceptance(inputString.value);
+});
+
+stepsButton.addEventListener('click', function (e) {
+    if(tree === null){
+        message("No string to show steps", "error");
+        return;
+    }
+    stepsDisplay.classList.toggle('stepsDisplayClose');
 });
