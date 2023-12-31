@@ -10,6 +10,7 @@ let clearButton = document.getElementById('clearButton');
 let stepsButton = document.getElementById('steps');
 let stepsDisplay = document.getElementById('stepsDisplay');
 let themeButton = document.getElementById('theme');
+let speed = document.getElementById('speed');
 isFinalState.parentElement.style.display = 'none';
 
 let ctx = canvas.getContext('2d');
@@ -509,4 +510,8 @@ stepsButton.addEventListener('click', function (e) {
         return;
     }
     stepsDisplay.classList.toggle('stepsDisplayClose');
+});
+
+speed.addEventListener('change', function (e) {
+    delay = 1500 - this.value * 100;
 });
