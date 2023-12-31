@@ -99,7 +99,7 @@ body {
 }
 
 .setting{
-    flex-basis: 150px;
+    flex-basis: 200px;
     display: flex;
     margin: 5px;
     align-items: center;
