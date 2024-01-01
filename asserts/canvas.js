@@ -19,6 +19,12 @@ let inputFormate = RegExp('[a-z0-9]');
 let selected = null;
 let evaluvate = [];
 let isEvaluvating = false;
+let isDragging = false;
+let dragstate = null;
+let dragCoordinates = {
+    x : null,
+    y : null
+};
 let delay = 500;
 let themes = {
     0 : {
@@ -89,23 +95,26 @@ class State{
 }
 
 class Loop{
-    constructor(x, y, text){
-        this.x = x;
-        this.y = y;
+    constructor(forState, text){
+        this.forState = forState;
         this.text = text;
     }
 
     draw(){
+
+        let x = this.forState.x;
+        let y = this.forState.y - radius/4 * 3;
+
         ctx.beginPath();
-        ctx.arc(this.x, this.y, radius, 0, Math.PI * 2, false);
+        ctx.arc(x, y, radius, 0, Math.PI * 2, false);
         ctx.strokeStyle = themes[theme].foreground;
         ctx.stroke();
         ctx.closePath();
 
         ctx.beginPath();
-        ctx.moveTo(this.x , this.y - radius);
-        ctx.lineTo(this.x - 8, this.y - radius - 8);
-        ctx.lineTo(this.x - 8, this.y - radius + 8);
+        ctx.moveTo(x , y - radius);
+        ctx.lineTo(x - 8, y - radius - 8);
+        ctx.lineTo(x - 8, y - radius + 8);
         ctx.fillStyle = themes[theme].foreground;
         ctx.fill();
         ctx.closePath();
@@ -114,24 +123,31 @@ class Loop{
         ctx.font = "15px Arial";
         ctx.textAlign = "center";
         ctx.fillStyle = themes[theme].foreground;
-        ctx.fillText(this.text, this.x , this.y - radius - 5);
+        ctx.fillText(this.text, x , y - radius - 5);
         ctx.closePath();
     }
 }
 
 class Line{
-    constructor(x1, y1, x2, y2, offset, text){
-        this.x1 = x1;
-        this.x2 = x2;
-        this.y1 = y1;
-        this.y2 = y2;
+    constructor(from, to, offset, text, isStartIndcation){
+        this.from = from;
+        this.to = to;
         this.offset = offset;
         this.text = text;
-        this.angle = Math.atan2(this.y2 - this.y1, this.x2 - this.x1);
+        this.angle = Math.atan2(this.to.y - this.from.y, this.to.x - this.from.x);
         this.angle += (Math.PI);
+        this.isStartIndcation = isStartIndcation;
     }
 
     draw(){
+
+        let x1 = this.from.x;
+        let y1 = this.from.y;
+        let x2 = this.to.x;
+        let y2 = this.to.y;
+
+        if(this.isStartIndcation)
+        x1 -= 50;
 
         let xOffset = this.offset * Math.sin(this.angle);
         let yOffset = this.offset * Math.cos(this.angle);
@@ -139,15 +155,15 @@ class Line{
         // console.log(xOffset, yOffset);
 
         ctx.beginPath();
-        ctx.moveTo(this.x1 + xOffset, this.y1 + yOffset);
-        ctx.lineTo(this.x2 + xOffset, this.y2 + yOffset);
+        ctx.moveTo(x1 + xOffset, y1 + yOffset);
+        ctx.lineTo(x2 + xOffset, y2 + yOffset);
         ctx.strokeStyle = themes[theme].foreground;
         ctx.stroke();
         ctx.closePath();
         // add arrow and text in the middle
 
-        let x = (this.x1 + this.x2) / 2 + xOffset;
-        let y = (this.y1 + this.y2) / 2 + yOffset;
+        let x = (x1 + x2) / 2 + xOffset;
+        let y = (y1 + y2) / 2 + yOffset;
 
         ctx.beginPath();
         ctx.moveTo(x, y);
@@ -223,7 +239,7 @@ function animate(){
         line.draw();
     });
     if(startState !== null){
-        let line = new Line(startState.x - 50, startState.y, startState.x, startState.y, 0, '');
+        let line = new Line(startState, startState, 0, '', true);
         line.draw();
     }
     states.forEach(state => {
@@ -259,7 +275,7 @@ function message(text, type){
 init();
 animate();
 
-canvas.addEventListener('click', function (e) {
+function addStateAndTransition(e) {
     let x = e.offsetX;
     let y = e.offsetY;
     let i;
@@ -276,7 +292,7 @@ canvas.addEventListener('click', function (e) {
                     transitions[selected.id] = {};
                 }
                 if(transitions[selected.id][states[i].id] === undefined){
-                    let loop = new Loop(selected.x, selected.y - radius/4 * 3, input);
+                    let loop = new Loop(selected, input);
                     loops.push(loop);
                     selected.color = themes[theme].foreground;
                     transitions[selected.id][states[i].id] = {'line' : loop, 'symbols' : []};
@@ -304,7 +320,7 @@ canvas.addEventListener('click', function (e) {
                     transitions[selected.id] = {};
                 }
                 if(transitions[selected.id][states[i].id] === undefined){
-                    let line = new Line(selected.x, selected.y, states[i].x, states[i].y, 0, input);
+                    let line = new Line(selected, states[i], 0, input, false);
                     lines.push(line);
                     selected.color = themes[theme].foreground;
                     transitions[selected.id][states[i].id] = {'line' : line, 'symbols' : []};
@@ -342,6 +358,41 @@ canvas.addEventListener('click', function (e) {
         startStateSelect.appendChild(option);
         states.push(state);
     }
+}
+
+canvas.addEventListener('mousedown', function (e) {
+    let x = e.offsetX;
+    let y = e.offsetY;
+    dragCoordinates.x = x;
+    dragCoordinates.y = y;
+    for(let i = 0; i<states.length; i++){
+        if(distance(x, y, states[i].x, states[i].y) < radius){
+            dragstate = states[i];
+            isDragging = true;
+            break;
+        }
+    }
+});
+
+canvas.addEventListener('mousemove', function (e) {
+    if(isDragging){
+        let x = e.offsetX;
+        let y = e.offsetY;
+        dragstate.x = x;
+        dragstate.y = y;
+    }
+});
+
+canvas.addEventListener('mouseup', function (e) {
+    if(isDragging && distance(dragstate.x, dragstate.y, dragCoordinates.x, dragCoordinates.y) > radius){
+        dragstate = null;
+        dragCoordinates.x = null;
+        dragCoordinates.y = null;
+    }
+    else{
+        addStateAndTransition(e);
+    }
+    isDragging = false;
 });
 
 function checkForAcceptance(input){
