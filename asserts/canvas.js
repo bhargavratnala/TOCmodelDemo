@@ -134,8 +134,6 @@ class Line{
         this.to = to;
         this.offset = offset;
         this.text = text;
-        this.angle = Math.atan2(this.to.y - this.from.y, this.to.x - this.from.x);
-        this.angle += (Math.PI);
         this.isStartIndcation = isStartIndcation;
     }
 
@@ -146,11 +144,14 @@ class Line{
         let x2 = this.to.x;
         let y2 = this.to.y;
 
+        let angle = Math.atan2(y2 - y1, x2 - x1);
+        angle += (Math.PI);
+
         if(this.isStartIndcation)
         x1 -= 50;
 
-        let xOffset = this.offset * Math.sin(this.angle);
-        let yOffset = this.offset * Math.cos(this.angle);
+        let xOffset = this.offset * Math.sin(angle);
+        let yOffset = this.offset * Math.cos(angle);
 
         // console.log(xOffset, yOffset);
 
@@ -167,8 +168,8 @@ class Line{
 
         ctx.beginPath();
         ctx.moveTo(x, y);
-        ctx.lineTo(x + 10 * Math.cos(this.angle - Math.PI /6), y + 10 * Math.sin(this.angle - Math.PI / 6));
-        ctx.lineTo(x + 10 * Math.cos(this.angle + Math.PI /6), y + 10 * Math.sin(this.angle + Math.PI / 6));
+        ctx.lineTo(x + 10 * Math.cos(angle - Math.PI /6), y + 10 * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(x + 10 * Math.cos(angle + Math.PI /6), y + 10 * Math.sin(angle + Math.PI / 6));
         ctx.lineTo(x, y);
         ctx.fillStyle = themes[theme].foreground;
         ctx.fill();
